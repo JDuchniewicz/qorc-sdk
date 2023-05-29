@@ -15,11 +15,11 @@
  *==========================================================*/
 
 /*==========================================================
-*                                                          
-*    File   : bootloader_task.c 
+*
+*    File   : bootloader_task.c
 *    Purpose: This file has task to execute flash Update functionality.
-*             
-*                                                          
+*
+*
 *=========================================================*/
 #include "Fw_global_config.h"
 
@@ -56,6 +56,8 @@ int check_active_images(void);
 #define METADATA_APPFFE_IS_FLASHED          (0x4)
 #define METADATA_VALID_IMAGE_IS_FLASHED     (METADATA_APPFPGA_IS_FLASHED|METADATA_M4APP_IS_FLASHED) // ffe not supported yet
 
+extern void read_flash(unsigned char *start_address, int length, unsigned char *destination);
+
 TaskHandle_t 	BLTaskHandle;
 static int user_button_pressed = 0;
 //static int user_btn_on_count = 0;
@@ -76,7 +78,7 @@ void check_user_button(void)
   }
   return;
 }
-/* 
+/*
 * This will set the red LED state to ON or OFF
 */
 void set_boot_error_led(uint8_t value)
@@ -84,18 +86,18 @@ void set_boot_error_led(uint8_t value)
   //Use the red LED to indicate fatal erro
   HAL_GPIO_Write(RED_LED_GPIO_NUM, value);
 }
-/* 
+/*
 * This will set the green LED state to ON or OFF
 */
 void set_downloading_led(uint8_t value)
 {
   //we use green LED toggle to indicate waiting
-  //So, set to constant ON during Flashing using USB  
+  //So, set to constant ON during Flashing using USB
   //as an Acknowledgement of User button press
   HAL_GPIO_Write(GREEN_LED_GPIO_NUM, value);
 }
-/* 
-* This will toggle green LED with time passed. 
+/*
+* This will toggle green LED with time passed.
 * The state is maintained internal.
 * Uses Tickcount to change the ON-OFF states.
 */
@@ -103,7 +105,7 @@ void toggle_downloading_led(int high_time_msec, int low_time_msec)
 {
   static uint8_t led_state = 1;
   static int led_state_count = 0;
-  
+
   //if the time exceeds the toggle time, change state and note time
   if(led_state == 1 && (xTaskGetTickCount() - led_state_count) > high_time_msec)
   {
@@ -122,12 +124,12 @@ void toggle_downloading_led(int high_time_msec, int low_time_msec)
 void set_waiting_led(uint8_t value)
 {
   //we use blue LED toggle to indicate waiting
-  //So, set to constant ON during Flashing using USB  
+  //So, set to constant ON during Flashing using USB
   //as an Acknowledgement of User button press
   HAL_GPIO_Write(BLUE_LED_GPIO_NUM, value);
 }
-/* 
-* This will toggle blue LED with time passed. 
+/*
+* This will toggle blue LED with time passed.
 * The state is maintained internal.
 * Uses Tickcount to change the ON-OFF states.
 */
@@ -135,10 +137,10 @@ void toggle_waiting_led(int toggle_time_msec)
 {
   static uint8_t led_state = 1;
   static int led_state_count = 0;
-  
+
   //set the led state first to last state
   HAL_GPIO_Write(BLUE_LED_GPIO_NUM, led_state);
-  
+
   //if the time exceeds the toggle time, change state and note time
   if((xTaskGetTickCount() - led_state_count) > toggle_time_msec)
   {
@@ -150,8 +152,8 @@ void toggle_waiting_led(int toggle_time_msec)
   }
   return;
 }
-/* 
-* This will toggle red LED with time passed. 
+/*
+* This will toggle red LED with time passed.
 * The state is maintained internal.
 * Uses Tickcount to change the ON-OFF states.
 */
@@ -159,10 +161,10 @@ void toggle_red_led(int toggle_time_msec)
 {
   static uint8_t led_state = 1;
   static int led_state_count = 0;
-  
+
   //set the led state first to last state
   HAL_GPIO_Write(RED_LED_GPIO_NUM, led_state);
-  
+
   //if the time exceeds the toggle time, change state and note time
   if((xTaskGetTickCount() - led_state_count) > toggle_time_msec)
   {
@@ -181,7 +183,7 @@ void toggle_red_led(int toggle_time_msec)
 *    If pressed, loads USB FPGA image and waits forever
 *    for the Reset Button to be pressed
 * 2. If the User Button is not pressed, M4 App is loaded.
-*    If it fails to load M4 App, waits forever for 
+*    If it fails to load M4 App, waits forever for
 *    User Button to be pressed to re-flash.
 */
 static void BLTaskHandler(void *pvParameters)
@@ -192,7 +194,7 @@ static void BLTaskHandler(void *pvParameters)
 	{
       // green led indicates waiting for button press
       toggle_waiting_led(200);
-      
+
       //if User button is pressed load USB FPGA image
       check_user_button();
       if(user_button_pressed)
@@ -224,18 +226,18 @@ static void BLTaskHandler(void *pvParameters)
         // check the image_info of appfpga, m4app and load the images accordingly
         uint8_t current_active_images = check_active_images();
 
-        if((current_active_images & METADATA_VALID_IMAGE_IS_FLASHED) == 0)
-        {
-            while(1)
-            {
-                //set red LED for error and turn off green LED
-                set_boot_error_led(1);
-                set_downloading_led(0);
-                dbg_str("ERROR: No Valid Image Found To Load! Waiting for re-flashing .. \n");
-                dbg_str("Press Reset then User Button and start Flash script .. \n\n");
-                vTaskDelay(5*1000);
-            }
-        }
+        //if((current_active_images & METADATA_VALID_IMAGE_IS_FLASHED) == 0)
+        //{
+        //    while(1)
+        //    {
+        //        //set red LED for error and turn off green LED
+        //        set_boot_error_led(1);
+        //        set_downloading_led(0);
+        //        dbg_str("ERROR: No Valid Image Found To Load! Waiting for re-flashing .. \n");
+        //        dbg_str("Press Reset then User Button and start Flash script .. \n\n");
+        //        vTaskDelay(5*1000);
+        //    }
+        //}
 
         if(current_active_images & METADATA_APPFPGA_IS_FLASHED)
         {
@@ -273,9 +275,9 @@ static void BLTaskHandler(void *pvParameters)
                 vTaskDelay(5*1000);
             }
         }
-        
+
         // if we reach here, then probably the m4app image is not active, we sit tight.
-        while(1);        
+        while(1);
       }
 	}
 }
@@ -296,7 +298,7 @@ int check_active_images()
     // for now, I think our organization is ok.
 
     // read the fpga metadata
-    bufPtr = (unsigned char *)image_metadata; 
+    bufPtr = (unsigned char *)image_metadata;
     read_flash((unsigned char *)FLASH_APPFPGA_META_ADDRESS, FLASH_APPFPGA_META_SIZE, bufPtr);
     image_crc = image_metadata[0];
     image_size = image_metadata[1];
@@ -315,11 +317,11 @@ int check_active_images()
             // ok, active image, and looks to have a proper image
             active_images |= METADATA_APPFPGA_IS_FLASHED;
         }
-        
+
     }
 
     // read the ffe metadata
-    bufPtr = (unsigned char *)image_metadata; 
+    bufPtr = (unsigned char *)image_metadata;
     read_flash((unsigned char *)FLASH_APPFFE_META_ADDRESS, FLASH_APPFFE_META_SIZE, bufPtr);
     image_crc = image_metadata[0];
     image_size = image_metadata[1];
@@ -338,31 +340,32 @@ int check_active_images()
             // ok, active image, and looks to have a proper image
             active_images |= METADATA_APPFFE_IS_FLASHED;
         }
-        
+
     }
 
     // read the m4 metadata
-    bufPtr = (unsigned char *)image_metadata; 
+    bufPtr = (unsigned char *)image_metadata;
     read_flash((unsigned char *)FLASH_APP_META_ADDRESS, FLASH_APP_META_SIZE, bufPtr);
     image_crc = image_metadata[0];
     image_size = image_metadata[1];
     image_info = image_metadata[2];
     image_info_ptr8 = (uint8_t*)(&image_info);
     //dbg_str("m4: 0x");dbg_hex8(image_info_ptr8[0]);dbg_str("\r\n");
-    if(image_info_ptr8[0] == 0x03)
-    {
-        if(image_size == 0xFFFFFFFF || image_crc == 0xFFFFFFFF)
-        {
-            // error, image is marked active, but doesn't seem to have image flashed!
-            dbg_str("warning: m4app image marked active, but seems to have invalid image\r\n");
-        }
-        else
-        {
-            // ok, active image, and looks to have a proper image
-            active_images |= METADATA_M4APP_IS_FLASHED;
-        }
-        
-    }
+    active_images |= METADATA_M4APP_IS_FLASHED;
+    //if(image_info_ptr8[0] == 0x03)
+    //{
+    //    if(image_size == 0xFFFFFFFF || image_crc == 0xFFFFFFFF)
+    //    {
+    //        // error, image is marked active, but doesn't seem to have image flashed!
+    //        dbg_str("warning: m4app image marked active, but seems to have invalid image\r\n");
+    //    }
+    //    else
+    //    {
+    //        // ok, active image, and looks to have a proper image
+    //        active_images |= METADATA_M4APP_IS_FLASHED;
+    //    }
+
+    //}
 
     return active_images;
 }

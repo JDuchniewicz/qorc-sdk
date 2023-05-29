@@ -15,10 +15,10 @@
  *==========================================================*/
 
 /*==========================================================
- *                                                          
- *    File   : bootloader_defines.h                                
- *    Purpose: 	            
- *                                                          
+ *
+ *    File   : bootloader_defines.h
+ *    Purpose:
+ *
  *=========================================================*/
 #ifndef __BL_DEFINES_H
 #define __BL_DEFINES_H
@@ -28,20 +28,22 @@
 #define BL_STACK_N_LOADER_SIZE      0x02000  //last 8K bytes of RAM has copy routine
 
 /* copy the first 64K of App at the end of the 512K RAM. It will be moved only if CRC checks */
-#define APP_FIRST_64K_RAM_START      ((unsigned char *)(0x80000 - BL_STACK_N_LOADER_SIZE - FLASH_BOOTLOADER_SIZE)) 
+#define APP_FIRST_64K_RAM_START      ((unsigned char *)(0x80000 - BL_STACK_N_LOADER_SIZE - FLASH_BOOTLOADER_SIZE))
 #define APP_AFTER_64K_RAM_START      ((unsigned char *)(FLASH_BOOTLOADER_SIZE))
 
 
 /* This is where App Execution Start address is after loaded in M4 memory */
-#define APP_START_OFFSET              0x0000000 
+#define APP_START_OFFSET              0x0000000
 
 //define the type of errors for BootLoader functions
-typedef enum Srec_Error {  
+typedef enum Srec_Error {
   BL_NO_ERROR = 0,
   BL_ERROR,
 } BL_Error_t;
 
 
 #define DISPLAY_WRITE_FEEDBACK  1 //enable to display a "." while write flash pages
+
+void program_flash( void *pParameter );
 
 #endif //__BL_DEFINES_H

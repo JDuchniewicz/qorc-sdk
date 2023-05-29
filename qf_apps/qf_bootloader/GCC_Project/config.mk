@@ -31,7 +31,7 @@ $(info "shell Windows cmd.exe")
 #SHELL :=cmd.exe
 DEVNUL := NUL
 WHICH := where
-BUILD_SYS=WINCMD
+#BUILD_SYS=WINCMD
 else
 $(info "shell Bash")
 SHELL=bash
@@ -141,7 +141,7 @@ export DEPEND_PATH=$(PROJ_DIR)/output/depend
 
 export APP_DIR = $(subst /GCC_Project,,${PROJ_DIR})
 TMPVAR = $(subst ${DIR_SEP}, ,${APP_DIR})
-PROJ_NAME=$(word $(words ${TMPVAR}),${TMPVAR})
+PROJ_NAME=$(words $(words ${TMPVAR}),${TMPVAR})
 export PROJ_NAME
 
 ifndef QORC_TC_PATH

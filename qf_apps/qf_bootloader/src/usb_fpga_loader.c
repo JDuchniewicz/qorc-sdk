@@ -15,11 +15,11 @@
  *==========================================================*/
 
 /*==========================================================
-*                                                          
-*    File   : usb_fpga_loader.c 
-*    Purpose: This file has function to load USB FPGA image 
-*             from the Flash and wait for reset 
-*                                                          
+*
+*    File   : usb_fpga_loader.c
+*    Purpose: This file has function to load USB FPGA image
+*             from the Flash and wait for reset
+*
 *=========================================================*/
 
 #include "Fw_global_config.h"
@@ -50,11 +50,11 @@ int check_fpga_crc(int image_size, uint32_t expected_crc)
   uint32_t image_crc32 = 0xFFFFFFFF;
   int size = image_size;
   const unsigned char *bufPtr;
-  
+
   //FPGA image is loaded immediatle after the 64K Bootloader
   bufPtr = APP_AFTER_64K_RAM_START;
   image_crc32 = xcrc32 (bufPtr, size, image_crc32);
-  
+
   if(image_crc32 != expected_crc)
   {
     dbg_str("USB FPGA image CRC mismatch \n");
@@ -65,16 +65,16 @@ int check_fpga_crc(int image_size, uint32_t expected_crc)
 /*
 * This function loads USB FPGA image into RAM immediateely after the Bootloader
 * The Size and CRC32 are checked using the image Metadata sector values
-* If they pass, the FPGA is loaded and wait for reset button to be pressed. 
+* If they pass, the FPGA is loaded and wait for reset button to be pressed.
 */
 int load_usb_flasher(void)
 {
 #if (UART_ID_BOOTLOADER == UART_ID_USBSERIAL)
   unsigned char *bufPtr;
   uint32_t image_crc, image_size;
-  
-  //get the meta data sector for USB FPGA 
-  bufPtr = (unsigned char *)image_metadata; 
+
+  //get the meta data sector for USB FPGA
+  bufPtr = (unsigned char *)image_metadata;
   read_flash((unsigned char *)FLASH_USBFPGA_META_ADDRESS, FLASH_USBFPGA_META_SIZE, bufPtr);
   image_crc = image_metadata[0];
   image_size = image_metadata[1];
@@ -83,11 +83,11 @@ int load_usb_flasher(void)
     dbg_str("USB FPGA Image size exceeded bootable size \n");
     return BL_ERROR;
   }
-  
+
   //FPGA image is loaded immediately after the 64K Bootloader
   bufPtr = APP_AFTER_64K_RAM_START;
   read_flash((unsigned char *)FLASH_USBFPGA_ADDRESS, image_size, bufPtr);
-  
+
   //check crc
   if(check_fpga_crc(image_size, image_crc) == BL_ERROR)
     return BL_ERROR;
@@ -109,7 +109,7 @@ int load_usb_flasher(void)
 #endif
   dbg_str("Press Reset button after flashing ..\n");
   //wait for the reset button to be pressed
-  program_flash();
+  program_flash(bufPtr);
   NVIC_SystemReset();
 
   //return BL_ERROR;

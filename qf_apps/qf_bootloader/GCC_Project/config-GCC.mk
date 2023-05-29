@@ -12,7 +12,7 @@ DASH_O=-Os
 
 #Assembler flags
 export AS_FLAGS= -mcpu=cortex-m4 -mthumb -mlittle-endian -mfloat-abi=hard -mfpu=fpv4-sp-d16 $(DASH_O) -fmessage-length=0 \
-        -fsigned-char -ffunction-sections -fdata-sections  $(DASH_G) -MMD -MP 
+        -fsigned-char -ffunction-sections -fdata-sections  $(DASH_G) -MMD -MP
 
 #Preprocessor macros
 
@@ -49,14 +49,14 @@ export INCLUDE_DIRS=-I"$(PROJ_DIR)" \
                  -I"$(PROJ_ROOT)/BSP/quickfeather/inc" \
                  -I"$(PROJ_ROOT)/Libraries/Utils/inc" \
                  -I"$(PROJ_ROOT)/Libraries/FPGA/inc"\
-                 -I"$(PROJ_ROOT)/Libraries/DatablockManager/inc" 
-    
-        
+                 -I"$(PROJ_ROOT)/Libraries/DatablockManager/inc"
+
+
 # C compiler flags
 export CFLAGS= $(MACROS) \
         -mcpu=cortex-m4 -mthumb -mlittle-endian -mfloat-abi=hard -mfpu=fpv4-sp-d16 \
         ${DASH_O} $(OPT_FLAGS) -fmessage-length=0 -lm \
-        -fsigned-char -ffunction-sections -fdata-sections  ${DASH_G} -std=c99 -MMD -MD -MP
+        -fsigned-char -ffunction-sections -fdata-sections  ${DASH_G} -std=c99 -MMD -MD -MP -Werror
 
 
 export LD_FLAGS_1= -mcpu=cortex-m4 -mthumb -mlittle-endian -mfloat-abi=hard -mfpu=fpv4-sp-d16 \

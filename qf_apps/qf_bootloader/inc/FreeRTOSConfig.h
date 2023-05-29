@@ -154,7 +154,7 @@ to exclude the API function. */
 #define INCLUDE_xTimerGetTimerDaemonTaskHandle	1
 
 #define __NVIC_PRIO_BITS          3       /*!< Tamar uses 3 Bits for the Priority Levels */
-    
+
 /* Cortex-M specific definitions. */
 #ifdef __NVIC_PRIO_BITS
 	/* __BVIC_PRIO_BITS will be specified when CMSIS is being used. */
@@ -189,7 +189,7 @@ header file. */
 #define configASSERT( x ) if( ( x ) == 0 ) {\
 	extern void save_assert_info(char* file, int line);\
 	extern void invoke_soft_fault(void);\
-	taskDISABLE_INTERRUPTS();\
+	portDISABLE_INTERRUPTS();\
 	save_assert_info(__FILE__,__LINE__);\
 	invoke_soft_fault();\
 };
