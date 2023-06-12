@@ -45,6 +45,8 @@
 #include "fpga_loader.h"    // API for loading FPGA
 #include "gateware.h"           // FPGA bitstream to load into FPGA
 
+#include "eoss3_hal_i2c.h"
+
 extern const struct cli_cmd_entry my_main_menu[];
 
 
@@ -58,6 +60,13 @@ const char *SOFTWARE_VERSION_STR;
 
 extern void qf_hardwareSetup();
 static void nvic_init(void);
+
+I2C_Config i2c0config =
+{
+  .eI2CFreq = I2C_400KHZ,    // 400kHz
+  .eI2CInt = I2C_DISABLE,    // enabled interrupt
+  .ucI2Cn = 0
+};
 
 int main(void)
 {
@@ -85,6 +94,38 @@ int main(void)
     dbg_str( "##########################\n\n");
 	
 	dbg_str( "\n\nHello world!!\n\n");	// <<<<<<<<<<<<<<<<<<<<<  Change me!
+
+    dbg_str("Enable HAL I2C..\n");
+    HAL_StatusTypeDef status;
+    status = HAL_Delay_Init();
+    if (status != HAL_OK) {
+        dbg_str("Failed to Init HAL..\n");
+        while(1);
+    }
+
+    status = HAL_I2C_Init(i2c0config);
+    if (status != HAL_OK) {
+        dbg_str("Failed to initialise HAL I2C0..\n");
+        while(1);
+    }
+    uint8_t rval[2]={0,0};
+    for (uint8_t i =0; i != 10; ++i)
+    {
+    status = HAL_I2C_Read(0x18, 0x0F, rval, 1);
+    if (status != HAL_OK) {
+        dbg_int(i);
+        dbg_str("Failed to read HAL I2C0 dev 0x18 at 0x0F..\n");
+        dbg_int(status);
+        dbg_str("\n");
+        continue;
+    }
+    break;
+    }
+    dbg_str("REGISTER VALS: ");
+    dbg_str_hex8("", rval[0]);
+    dbg_str_hex8("", rval[1]);
+    dbg_str("\n");
+
 
     CLI_start_task( my_main_menu );
         

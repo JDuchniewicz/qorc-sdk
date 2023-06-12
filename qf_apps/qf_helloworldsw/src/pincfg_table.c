@@ -75,27 +75,27 @@ PadConfig pincfg_table[] =
     .ucSmtTrg = PAD_SMT_TRIG_DIS
   },
   
-  {  // configure SCL0
-    .ucPin = PAD_0,
-    .ucFunc = PAD0_FUNC_SEL_SCL_0,
-    .ucCtrl = PAD_CTRL_SRC_OTHER,
-    .ucMode = PAD_MODE_INPUT_EN,
-    .ucPull = PAD_PULLUP,
-    .ucDrv = PAD_DRV_STRENGHT_4MA,
-    .ucSpeed = PAD_SLEW_RATE_SLOW,
-    .ucSmtTrg = PAD_SMT_TRIG_DIS,
-  },
+  //{  // configure SCL0
+  //  .ucPin = PAD_0,
+  //  .ucFunc = PAD0_FUNC_SEL_SCL_0,
+  //  .ucCtrl = PAD_CTRL_SRC_OTHER,
+  //  .ucMode = PAD_MODE_INPUT_EN,
+  //  .ucPull = PAD_PULLUP,
+  //  .ucDrv = PAD_DRV_STRENGHT_4MA,
+  //  .ucSpeed = PAD_SLEW_RATE_SLOW,
+  //  .ucSmtTrg = PAD_SMT_TRIG_DIS,
+  //},
 
-  {  // configure SDA0
-    .ucPin = PAD_1,
-    .ucFunc = PAD1_FUNC_SEL_SDA_0,
-    .ucCtrl = PAD_CTRL_SRC_OTHER,
-    .ucMode = PAD_MODE_INPUT_EN,
-    .ucPull = PAD_PULLUP,
-    .ucDrv = PAD_DRV_STRENGHT_4MA,
-    .ucSpeed = PAD_SLEW_RATE_SLOW,
-    .ucSmtTrg = PAD_SMT_TRIG_DIS,
-  },
+  //{  // configure SDA0
+  //  .ucPin = PAD_1,
+  //  .ucFunc = PAD1_FUNC_SEL_SDA_0,
+  //  .ucCtrl = PAD_CTRL_SRC_OTHER,
+  //  .ucMode = PAD_MODE_INPUT_EN,
+  //  .ucPull = PAD_PULLUP,
+  //  .ucDrv = PAD_DRV_STRENGHT_4MA,
+  //  .ucSpeed = PAD_SLEW_RATE_SLOW,
+  //  .ucSmtTrg = PAD_SMT_TRIG_DIS,
+  //},
   
   // LEDS
    { // setup blue LED

@@ -35,6 +35,7 @@
 #include <eoss3_hal_wb.h>
 //#include "eoss3_hal_power.h"
 #include "Fw_global_config.h"
+#include "dbg_uart.h"
 
 #ifdef __RTOS
 #include <FreeRTOS.h>
@@ -44,6 +45,7 @@
 					volatile unsigned int _delayCycleCount = _x_;	\
 					while (_delayCycleCount--);			\
 				} while(0)
+#define CYCLE_DELAY_COUNT 5 // how many cycles to wait after each write to TXRX data register for i2c, for FFE to pick up the data and transmit to the i2c device (otherwise will fail on next transmission function)
 
 /* This variable holds I2C status */
 I2C_State eI2CState = I2C_RESET;
@@ -288,16 +290,21 @@ HAL_StatusTypeDef HAL_I2C_Read(UINT8_t ucDevAddress, UINT8_t ucAddress, UINT8_t 
   eI2CState = I2C_BUSY;
 
   /* Request for write */
+  //dbg_str("request for write..\n");
   if(HAL_WB_Transmit(I2C_TXRX_DR, ((ucDevAddress<<1) & (~1)), ucI2CSlaveID) != HAL_OK)
   {
     	eI2CState = I2C_READY;
+      dbg_str("request for write FAILED..\n");
 	return HAL_ERROR;
   }
 
   /* Generate command with start condition and write cycle */
+  //dbg_str("dupa2..\n");
+  delayCycles(CYCLE_DELAY_COUNT);
   if(HAL_WB_Transmit(I2C_CMD_SR, CMD_START_BIT | CMD_WRITE_SLAVE_BIT, ucI2CSlaveID) != HAL_OK)
   {
     	eI2CState = I2C_READY;
+  dbg_str("dupa2 FAILED..\n");
 	return HAL_ERROR;
   }
 
@@ -308,23 +315,30 @@ HAL_StatusTypeDef HAL_I2C_Read(UINT8_t ucDevAddress, UINT8_t ucAddress, UINT8_t 
   }while(ucI2CStatus & (1<<SR_TIP_BIT));
 
   /* Read acknowledge from slave */
+  //dbg_str("dupa3..\n");
   if((ucI2CStatus & (1<<SR_RXACK_BIT)))
   {
         eI2CState = I2C_READY;
+  dbg_str("dupa3 FAILED..\n");
     	return HAL_ERROR;
   }
 
   /* Write address */
+  //dbg_str("dupa4..\n");
   if(HAL_WB_Transmit(I2C_TXRX_DR, ucAddress, ucI2CSlaveID) != HAL_OK)
   {
     	eI2CState = I2C_READY;
+  dbg_str("dupa4 FAILED..\n");
 	return HAL_ERROR;
   }
 
   /* Generate command with stop condition and write cycle */
+  //dbg_str("dupa5..\n");
+  delayCycles(CYCLE_DELAY_COUNT);
   if(HAL_WB_Transmit(I2C_CMD_SR, CMD_STOP_BIT | CMD_WRITE_SLAVE_BIT, ucI2CSlaveID) != HAL_OK)
   {
     	eI2CState = I2C_READY;
+  dbg_str("dupa5 FAILED..\n");
 	return HAL_ERROR;
   }
 
@@ -335,16 +349,21 @@ HAL_StatusTypeDef HAL_I2C_Read(UINT8_t ucDevAddress, UINT8_t ucAddress, UINT8_t 
   }while(ucI2CStatus & (1<<SR_TIP_BIT));
 
   /* Request for Read */
+  //dbg_str("dupa6..\n");
   if(HAL_WB_Transmit(I2C_TXRX_DR, ((ucDevAddress<<1) | 1), ucI2CSlaveID) != HAL_OK)
   {
     	eI2CState = I2C_READY;
+  dbg_str("dupa6 FAILED..\n");
 	return HAL_ERROR;
   }
 
   /* Generate command with start condition and write cycle */
+  //dbg_str("dupa7..\n");
+  delayCycles(CYCLE_DELAY_COUNT);
   if(HAL_WB_Transmit(I2C_CMD_SR, CMD_START_BIT | CMD_WRITE_SLAVE_BIT, ucI2CSlaveID) != HAL_OK)
   {
     	eI2CState = I2C_READY;
+  dbg_str("dupa7 FAILED..\n");
 	return HAL_ERROR;
   }
 
@@ -355,9 +374,11 @@ HAL_StatusTypeDef HAL_I2C_Read(UINT8_t ucDevAddress, UINT8_t ucAddress, UINT8_t 
   }while(ucI2CStatus & (1<<SR_TIP_BIT));
 
   /* Read acknowledge from slave */
+  //dbg_str("dupa8..\n");
   if((ucI2CStatus & (1<<SR_RXACK_BIT)))
   {
       	eI2CState = I2C_READY;
+  dbg_str("dupa8 FAILED..\n");
     	return HAL_ERROR;
   }
 
@@ -367,6 +388,7 @@ HAL_StatusTypeDef HAL_I2C_Read(UINT8_t ucDevAddress, UINT8_t ucAddress, UINT8_t 
     if(HAL_WB_Transmit(I2C_CMD_SR, CMD_READ_SLAVE_BIT, ucI2CSlaveID) != HAL_OK)
     {
       	eI2CState = I2C_READY;
+      dbg_str("dupa9 FAILED..\n");
     	return HAL_ERROR;
     }
 
@@ -381,17 +403,20 @@ HAL_StatusTypeDef HAL_I2C_Read(UINT8_t ucDevAddress, UINT8_t ucAddress, UINT8_t 
     if((ucI2CStatus & (1<<SR_RXACK_BIT)))
     {
         eI2CState = I2C_READY;
+      dbg_str("dupa10 FAILED..\n");
     	return HAL_ERROR;
     }
 
   /* Read data */
     HAL_WB_Receive(I2C_TXRX_DR, pucData++, ucI2CSlaveID);
+    // TODO: possibly add another delay?
   }
 
   /* Generate command with ACK and READ cycle */
   if(HAL_WB_Transmit(I2C_CMD_SR, CMD_STOP_BIT | CMD_NACK_BIT | CMD_READ_SLAVE_BIT, ucI2CSlaveID) != HAL_OK)
   {
     	eI2CState = I2C_READY;
+      dbg_str("dupa11 FAILED..\n");
     	return HAL_ERROR;
   }
 
