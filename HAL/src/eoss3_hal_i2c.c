@@ -45,7 +45,12 @@
 					volatile unsigned int _delayCycleCount = _x_;	\
 					while (_delayCycleCount--);			\
 				} while(0)
-#define CYCLE_DELAY_COUNT 5 // how many cycles to wait after each write to TXRX data register for i2c, for FFE to pick up the data and transmit to the i2c device (otherwise will fail on next transmission function)
+#define MAX_CYCLES_FFE 50 // how many cycles to wait after each write to TXRX data register for i2c, for FFE to stop being busy - pick up the data and transmit to the i2c device (otherwise will fail on next transmission function)
+#define waitFFEReady(_x_) for (int i = 0; i != _x_; i++) \
+                                  if (!((EXT_REGS_FFE->CSR & WB_CSR_BUSY) \
+                                              || (EXT_REGS_FFE->CSR & WB_CSR_MASTER_START)))\
+                                              break;
+
 
 /* This variable holds I2C status */
 I2C_State eI2CState = I2C_RESET;
@@ -177,6 +182,7 @@ HAL_StatusTypeDef HAL_I2C_Write(UINT8_t ucDevAddress, UINT8_t ucAddress, UINT8_t
     	eI2CState = I2C_READY;
 	return HAL_ERROR;
   }
+  waitFFEReady(MAX_CYCLES_FFE);
 
   /* Generate command with start condition and write cycle */
   if(HAL_WB_Transmit(I2C_CMD_SR, CMD_START_BIT | CMD_WRITE_SLAVE_BIT, ucI2CSlaveID) != HAL_OK)
@@ -203,6 +209,7 @@ HAL_StatusTypeDef HAL_I2C_Write(UINT8_t ucDevAddress, UINT8_t ucAddress, UINT8_t
     	eI2CState = I2C_READY;
 	return HAL_ERROR;
   }
+  waitFFEReady(MAX_CYCLES_FFE);
 
   /* Generate command with stop condition and write cycle */
   if(HAL_WB_Transmit(I2C_CMD_SR, CMD_WRITE_SLAVE_BIT, ucI2CSlaveID) != HAL_OK)
@@ -232,6 +239,7 @@ HAL_StatusTypeDef HAL_I2C_Write(UINT8_t ucDevAddress, UINT8_t ucAddress, UINT8_t
       	eI2CState = I2C_READY;
 	return HAL_ERROR;
     }
+    waitFFEReady(MAX_CYCLES_FFE);
 
     /* Generate command with write cycle */
     if(HAL_WB_Transmit(I2C_CMD_SR, CMD_WRITE_SLAVE_BIT, ucI2CSlaveID) != HAL_OK)
@@ -253,6 +261,7 @@ HAL_StatusTypeDef HAL_I2C_Write(UINT8_t ucDevAddress, UINT8_t ucAddress, UINT8_t
     	eI2CState = I2C_READY;
 	return HAL_ERROR;
   }
+  waitFFEReady(MAX_CYCLES_FFE);
 
   /* Generate command with stop condition and write cycle */
   if(HAL_WB_Transmit(I2C_CMD_SR, CMD_STOP_BIT | CMD_WRITE_SLAVE_BIT, ucI2CSlaveID) != HAL_OK)
@@ -297,10 +306,9 @@ HAL_StatusTypeDef HAL_I2C_Read(UINT8_t ucDevAddress, UINT8_t ucAddress, UINT8_t 
       dbg_str("request for write FAILED..\n");
 	return HAL_ERROR;
   }
+  waitFFEReady(MAX_CYCLES_FFE);
 
   /* Generate command with start condition and write cycle */
-  //dbg_str("dupa2..\n");
-  delayCycles(CYCLE_DELAY_COUNT);
   if(HAL_WB_Transmit(I2C_CMD_SR, CMD_START_BIT | CMD_WRITE_SLAVE_BIT, ucI2CSlaveID) != HAL_OK)
   {
     	eI2CState = I2C_READY;
@@ -331,10 +339,9 @@ HAL_StatusTypeDef HAL_I2C_Read(UINT8_t ucDevAddress, UINT8_t ucAddress, UINT8_t 
   dbg_str("dupa4 FAILED..\n");
 	return HAL_ERROR;
   }
+  waitFFEReady(MAX_CYCLES_FFE);
 
   /* Generate command with stop condition and write cycle */
-  //dbg_str("dupa5..\n");
-  delayCycles(CYCLE_DELAY_COUNT);
   if(HAL_WB_Transmit(I2C_CMD_SR, CMD_STOP_BIT | CMD_WRITE_SLAVE_BIT, ucI2CSlaveID) != HAL_OK)
   {
     	eI2CState = I2C_READY;
@@ -356,10 +363,9 @@ HAL_StatusTypeDef HAL_I2C_Read(UINT8_t ucDevAddress, UINT8_t ucAddress, UINT8_t 
   dbg_str("dupa6 FAILED..\n");
 	return HAL_ERROR;
   }
+  waitFFEReady(MAX_CYCLES_FFE);
 
   /* Generate command with start condition and write cycle */
-  //dbg_str("dupa7..\n");
-  delayCycles(CYCLE_DELAY_COUNT);
   if(HAL_WB_Transmit(I2C_CMD_SR, CMD_START_BIT | CMD_WRITE_SLAVE_BIT, ucI2CSlaveID) != HAL_OK)
   {
     	eI2CState = I2C_READY;
@@ -409,7 +415,6 @@ HAL_StatusTypeDef HAL_I2C_Read(UINT8_t ucDevAddress, UINT8_t ucAddress, UINT8_t 
 
   /* Read data */
     HAL_WB_Receive(I2C_TXRX_DR, pucData++, ucI2CSlaveID);
-    // TODO: possibly add another delay?
   }
 
   /* Generate command with ACK and READ cycle */
@@ -458,6 +463,7 @@ HAL_StatusTypeDef HAL_I2C_Read16(UINT8_t ucDevAddress, UINT16_t ucAddress, UINT8
     	eI2CState = I2C_READY;
 	return HAL_ERROR;
   }
+  waitFFEReady(MAX_CYCLES_FFE);
 
   /* Generate command with start condition and write cycle */
   if(HAL_WB_Transmit(I2C_CMD_SR, CMD_START_BIT | CMD_WRITE_SLAVE_BIT, ucI2CSlaveID) != HAL_OK)
@@ -485,6 +491,7 @@ HAL_StatusTypeDef HAL_I2C_Read16(UINT8_t ucDevAddress, UINT16_t ucAddress, UINT8
     	eI2CState = I2C_READY;
 	return HAL_ERROR;
   }
+  waitFFEReady(MAX_CYCLES_FFE);
 
     /* Generate command with write cycle */
     if(HAL_WB_Transmit(I2C_CMD_SR, CMD_WRITE_SLAVE_BIT, ucI2CSlaveID) != HAL_OK)
@@ -504,6 +511,7 @@ HAL_StatusTypeDef HAL_I2C_Read16(UINT8_t ucDevAddress, UINT16_t ucAddress, UINT8
     	eI2CState = I2C_READY;
 	return HAL_ERROR;
   }
+  waitFFEReady(MAX_CYCLES_FFE);
   
   /* Generate command with stop condition and write cycle */
   if(HAL_WB_Transmit(I2C_CMD_SR, CMD_STOP_BIT | CMD_WRITE_SLAVE_BIT, ucI2CSlaveID) != HAL_OK)
@@ -524,6 +532,7 @@ HAL_StatusTypeDef HAL_I2C_Read16(UINT8_t ucDevAddress, UINT16_t ucAddress, UINT8
     	eI2CState = I2C_READY;
 	return HAL_ERROR;
   }
+  waitFFEReady(MAX_CYCLES_FFE);
 
   /* Generate command with start condition and write cycle */
   if(HAL_WB_Transmit(I2C_CMD_SR, CMD_START_BIT | CMD_WRITE_SLAVE_BIT, ucI2CSlaveID) != HAL_OK)
@@ -610,7 +619,8 @@ HAL_StatusTypeDef HAL_I2C_Write16(UINT8_t ucDevAddress, UINT16_t ucAddress, UINT
 
   eI2CState = I2C_BUSY;
   //HAL_SetPowerDomainState(FFE,WAKEUP);
-  delayCycles(50);
+  delayCycles(50); // TODO: do we need this?
+  waitFFEReady(MAX_CYCLES_FFE);
 
   /* Request for write */
   if(HAL_WB_Transmit(I2C_TXRX_DR, ((ucDevAddress<<1) & (~1)), ucI2CSlaveID) != HAL_OK)
@@ -618,6 +628,7 @@ HAL_StatusTypeDef HAL_I2C_Write16(UINT8_t ucDevAddress, UINT16_t ucAddress, UINT
     	eI2CState = I2C_READY;
 	return HAL_ERROR;
   }
+  waitFFEReady(MAX_CYCLES_FFE);
 
   /* Generate command with start condition and write cycle */
   if(HAL_WB_Transmit(I2C_CMD_SR, CMD_START_BIT | CMD_WRITE_SLAVE_BIT, ucI2CSlaveID) != HAL_OK)
@@ -645,6 +656,7 @@ HAL_StatusTypeDef HAL_I2C_Write16(UINT8_t ucDevAddress, UINT16_t ucAddress, UINT
     	eI2CState = I2C_READY;
 	return HAL_ERROR;
   }
+  waitFFEReady(MAX_CYCLES_FFE);
 
     /* Generate command with write cycle */
     if(HAL_WB_Transmit(I2C_CMD_SR, CMD_WRITE_SLAVE_BIT, ucI2CSlaveID) != HAL_OK)
@@ -665,6 +677,7 @@ HAL_StatusTypeDef HAL_I2C_Write16(UINT8_t ucDevAddress, UINT16_t ucAddress, UINT
     	eI2CState = I2C_READY;
 	return HAL_ERROR;
   }
+  waitFFEReady(MAX_CYCLES_FFE);
 
   /* Generate command with stop condition and write cycle */
   if(HAL_WB_Transmit(I2C_CMD_SR, CMD_WRITE_SLAVE_BIT, ucI2CSlaveID) != HAL_OK)
@@ -694,6 +707,7 @@ HAL_StatusTypeDef HAL_I2C_Write16(UINT8_t ucDevAddress, UINT16_t ucAddress, UINT
       	eI2CState = I2C_READY;
 	return HAL_ERROR;
     }
+    waitFFEReady(MAX_CYCLES_FFE);
 
     /* Generate command with write cycle */
     if(HAL_WB_Transmit(I2C_CMD_SR, CMD_WRITE_SLAVE_BIT, ucI2CSlaveID) != HAL_OK)
@@ -715,6 +729,7 @@ HAL_StatusTypeDef HAL_I2C_Write16(UINT8_t ucDevAddress, UINT16_t ucAddress, UINT
     	eI2CState = I2C_READY;
 	return HAL_ERROR;
   }
+  waitFFEReady(MAX_CYCLES_FFE);
 
   /* Generate command with stop condition and write cycle */
   if(HAL_WB_Transmit(I2C_CMD_SR, CMD_STOP_BIT | CMD_WRITE_SLAVE_BIT, ucI2CSlaveID) != HAL_OK)
@@ -757,6 +772,7 @@ HAL_StatusTypeDef HAL_I2C_Read_UsingRestart(UINT8_t ucDevAddress, UINT8_t ucAddr
     	eI2CState = I2C_READY;
 	return HAL_ERROR;
   }
+  waitFFEReady(MAX_CYCLES_FFE);
 
   /* Generate command with start condition and write cycle */
   if(HAL_WB_Transmit(I2C_CMD_SR, CMD_START_BIT | CMD_WRITE_SLAVE_BIT, ucI2CSlaveID) != HAL_OK)
@@ -784,6 +800,7 @@ HAL_StatusTypeDef HAL_I2C_Read_UsingRestart(UINT8_t ucDevAddress, UINT8_t ucAddr
     	eI2CState = I2C_READY;
 	return HAL_ERROR;
   }
+  waitFFEReady(MAX_CYCLES_FFE);
 
   /* Generate command with stop condition and write cycle */
   if(HAL_WB_Transmit(I2C_CMD_SR, /* CMD_STOP_BIT | */ CMD_WRITE_SLAVE_BIT, ucI2CSlaveID) != HAL_OK)
@@ -804,6 +821,7 @@ HAL_StatusTypeDef HAL_I2C_Read_UsingRestart(UINT8_t ucDevAddress, UINT8_t ucAddr
     	eI2CState = I2C_READY;
 	return HAL_ERROR;
   }
+  waitFFEReady(MAX_CYCLES_FFE);
 
   /* Generate command with start condition and write cycle */
   if(HAL_WB_Transmit(I2C_CMD_SR, CMD_START_BIT | CMD_WRITE_SLAVE_BIT, ucI2CSlaveID) != HAL_OK)
@@ -895,6 +913,7 @@ HAL_StatusTypeDef HAL_I2C_ReadRawData(UINT8_t ucDevAddress, UINT8_t *pucDataBuf,
     	eI2CState = I2C_READY;
 	return HAL_ERROR;
   }
+  waitFFEReady(MAX_CYCLES_FFE);
 
   /* Generate command with start condition and write cycle */
   if(HAL_WB_Transmit(I2C_CMD_SR, CMD_START_BIT | CMD_WRITE_SLAVE_BIT, ucI2CSlaveID) != HAL_OK)
@@ -984,6 +1003,7 @@ HAL_StatusTypeDef HAL_I2C_WriteRawData(UINT8_t ucDevAddress, UINT8_t *pucDataBuf
     	eI2CState = I2C_READY;
 	return HAL_ERROR;
   }
+  waitFFEReady(MAX_CYCLES_FFE);
 
   /* Generate command with start condition and write cycle */
   if(HAL_WB_Transmit(I2C_CMD_SR, CMD_START_BIT | CMD_WRITE_SLAVE_BIT, ucI2CSlaveID) != HAL_OK)
@@ -1012,6 +1032,7 @@ HAL_StatusTypeDef HAL_I2C_WriteRawData(UINT8_t ucDevAddress, UINT8_t *pucDataBuf
       	eI2CState = I2C_READY;
 	return HAL_ERROR;
     }
+    waitFFEReady(MAX_CYCLES_FFE);
 
     /* Generate command with write cycle */
     if(HAL_WB_Transmit(I2C_CMD_SR, CMD_WRITE_SLAVE_BIT, ucI2CSlaveID) != HAL_OK)
@@ -1035,6 +1056,7 @@ HAL_StatusTypeDef HAL_I2C_WriteRawData(UINT8_t ucDevAddress, UINT8_t *pucDataBuf
 			eI2CState = I2C_READY;
 		return HAL_ERROR;
 	  }
+      waitFFEReady(MAX_CYCLES_FFE);
   }
   if (stop) {
 	  stop = CMD_STOP_BIT;
